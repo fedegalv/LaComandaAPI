@@ -51,6 +51,7 @@ $app->group('/registro', function (RouteCollectorProxy $group) {
 $app->group('/usuario', function (RouteCollectorProxy $group) {
     $group->delete('[/{id}]', UsuarioController:: class .":delete")->add(new SocioAuthMiddleware);
     $group->post('[/suspender/{id}]', UsuarioController:: class .":suspender")->add(new SocioAuthMiddleware);
+    $group->get('[/]', UsuarioController:: class .":getAll")->add(new SocioAuthMiddleware);
     
 })->add(new JsonMiddleware);
 
