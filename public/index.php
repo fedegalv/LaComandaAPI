@@ -34,20 +34,23 @@ use App\Middlewares\EmpleadoAuthMiddleware;
 $app = AppFactory::create();
 
 
-$app->setBasePath('/Comanda_TP/public');
+$app->setBasePath('/LaComandaAPI/public');
 
 new Database;
 //PRODUCTOS
 $app->group('/producto', function (RouteCollectorProxy $group) {
     $group->post('[/]', ProductoController:: class .":add");
+    $group->get('[/]', ProductoController:: class .":getAll");
+    $group->delete('[/{id}]', ProductoController:: class .":delete");
+    
 })->add(new JsonMiddleware);
 //USUARIOS
 $app->group('/registro', function (RouteCollectorProxy $group) {
     $group->post('[/]', UsuarioController:: class .":registro");
 })->add(new JsonMiddleware);
 $app->group('/usuario', function (RouteCollectorProxy $group) {
-    $group->delete('[/{id}]', UsuarioController:: class .":delete");
-    $group->post('[/suspender/{id}]', UsuarioController:: class .":suspender");
+    $group->delete('[/{id}]', UsuarioController:: class .":delete")->add(new SocioAuthMiddleware);
+    $group->post('[/suspender/{id}]', UsuarioController:: class .":suspender")->add(new SocioAuthMiddleware);
     
 })->add(new JsonMiddleware);
 
@@ -65,11 +68,13 @@ $app->group('/pedidosCompletos', function (RouteCollectorProxy $group) {
     $group->get('[/]', PedidoController:: class .":getCompleto")->add(new EmpleadoAuthMiddleware);
 })->add(new JsonMiddleware);
 $app->group('/pedidos', function (RouteCollectorProxy $group) {
-    //VER PEDIDO COMPLETOS
+    //AGREGAR PEDIDO
+    $group->post('[/]', PedidoController:: class .":add")->add(new MozoAuthMiddleware);
+    //VER  PEDIDOS
     $group->get('[/]', PedidoController:: class .":verEstadoPedidos")->add(new EmpleadoAuthMiddleware);
 })->add(new JsonMiddleware);
 $app->group('/servirPedido', function (RouteCollectorProxy $group) {
-    //VER PEDIDO COMPLETOS
+    //SERVIR PEDIDO SI ESTA LISTO PARA SERVIR
     $group->post('[/]', PedidoController:: class .":servirPedido")->add(new MozoAuthMiddleware);
 })->add(new JsonMiddleware);
 
@@ -81,27 +86,38 @@ $app->group('/terminarEncargo', function (RouteCollectorProxy $group) {
 $app->group('/login', function (RouteCollectorProxy $group) {
     $group->post('[/]', UsuarioController:: class .":login");
 })->add(new JsonMiddleware);
-
+/////
+// MESAS
 $app->group('/mesa', function (RouteCollectorProxy $group) {
-    $group->get('[/{codigoMesa}]', MesaController:: class .":getByCodigoMesa")->add(new MozoAuthMiddleware);
-    
+    $group->get('[/{codigoMesa}]', MesaController:: class .":getByCodigoMesa")->add(new MozoYSocioAuthMiddleware);
 })->add(new JsonMiddleware);
+
+$app->group('/mesas', function (RouteCollectorProxy $group) {
+    $group->get('[/]', MesaController:: class .":getAll")->add(new MozoYSocioAuthMiddleware);
+})->add(new JsonMiddleware);
+
 $app->group('/pagarMesa', function (RouteCollectorProxy $group) {
     $group->post('[/]', MesaController:: class .":clientePagandoMesa")->add(new MozoAuthMiddleware);
+})->add(new JsonMiddleware);
+$app->group('/mesaMasFacturo', function (RouteCollectorProxy $group) {
+    $group->get('[/]', MesaController:: class .":mesaMasFacturo")->add(new SocioAuthMiddleware);
+})->add(new JsonMiddleware);
+$app->group('/mesaMenosFacturo', function (RouteCollectorProxy $group) {
+    $group->get('[/]', MesaController:: class .":mesaMenosFacturo")->add(new SocioAuthMiddleware);
 })->add(new JsonMiddleware);
 $app->group('/cerrarMesa', function (RouteCollectorProxy $group) {
     $group->post('[/]', MesaController:: class .":cerrarMesa")->add(new SocioAuthMiddleware);
 })->add(new JsonMiddleware);
 
-//PEDIDOS
-$app->group('/pedidos', function (RouteCollectorProxy $group) {
-    $group->post('[/]', PedidoController:: class .":add")->add(new MozoAuthMiddleware);
+///
 
-})->add(new JsonMiddleware);
+/// INFORMES
 $app->group('/masVendido', function (RouteCollectorProxy $group) {
     $group->get('[/]', PedidoController:: class .":loMasVendido")->add(new SocioAuthMiddleware);
 })->add(new JsonMiddleware);
-
+$app->group('/menosVendido', function (RouteCollectorProxy $group) {
+    $group->get('[/]', PedidoController:: class .":loMenosVendido")->add(new SocioAuthMiddleware);
+})->add(new JsonMiddleware);
 $app->group('/operaciones', function (RouteCollectorProxy $group) {
     $group->get('[/{sector}]', EncargoController:: class .":cantidadOperacionesSector")->add(new SocioAuthMiddleware);
 })->add(new JsonMiddleware);

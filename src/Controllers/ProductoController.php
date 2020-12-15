@@ -46,10 +46,13 @@ class ProductoController
     {
         //BUSCA ALUMNO POR ID
         $producto = Producto::find($args['id']);
-
+        if ($producto == null) {
+            $response->getBody()->write("Producto no encontrado");
+            return $response->withStatus(400);
+        }
         //BORRA DE BASE DE DATO, DEVUELVE TRUE OR FALSE
         $rta = $producto->delete();
-        $response->getBody()->write(json_encode($rta));
+        $response->getBody()->write("Producto {$args['id']} fue borrado con exito");
         return $response;
     }
 
@@ -63,7 +66,7 @@ class ProductoController
 
         $rta = $producto->save();
         if ($rta) {
-            $response->getBody()->write("PRODUCTO REGISTRADO CON EXITO");
+            $response->getBody()->write("PRODUCTO {$producto->descripcion} REGISTRADO CON EXITO");
         } else {
             $response->getBody()->write("HUBO UN ERROR AL REGISTRAR PRODUCTO");
             return $response->withStatus(400);

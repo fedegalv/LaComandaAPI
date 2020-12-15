@@ -10,6 +10,7 @@ use \Firebase\JWT\JWT;
 
 use App\Models\Encargo;
 use App\Models\Pedido;
+use App\Models\Producto;
 
 class EncargoController{
     public function tomarEncargo(Request $request, Response $response)
@@ -22,7 +23,7 @@ class EncargoController{
         ->first();
         $token =  $request->getHeader('token');
         $decoded = JWT::decode($token[0], "laComanda", array('HS256'));
-
+        $listaProductos = "Productos en preparacion: \n";
         switch ($decoded->tipo) {
             case 'bartender':
                 $encargos = Encargo::where('sector', '=', 'bar')->where('codigo_pedido', '=', $codigoPedido)->get();
@@ -30,13 +31,16 @@ class EncargoController{
                     $encargo->estado = "en preparacion";
                     $encargo->tiempo_preparacion += $tiempo_preparacion;
                     $encargo->save();
+                    $producto = Producto::where('id', '=', $encargo->id_producto)->first();
+                    $listaProductos .= "{$producto->descripcion}\n";
                 }
 
                 $pedido->tiempo_preparacion += $tiempo_preparacion;
                 $pedido->estado = 'en preparacion';
                 $pedido->save();
                 
-                $response->getBody()->write("Los encargos para {$codigoPedido} del sector BARRA TRAGOS Y VINOS estan en preparacion, llevara {$tiempo_preparacion}m");
+
+                $response->getBody()->write("Los encargos para {$codigoPedido} del sector BARRA TRAGOS Y VINOS estan en preparacion, llevara {$tiempo_preparacion}m\n{$listaProductos}");
                 return $response->withStatus(200);
                 break;
             
@@ -46,29 +50,33 @@ class EncargoController{
                     $encargo->estado = "en preparacion";
                     $encargo->tiempo_preparacion += $tiempo_preparacion;
                     $encargo->save();
+                    $producto = Producto::where('id', '=', $encargo->id_producto)->first();
+                    $listaProductos .= "{$producto->descripcion}";
                 }
 
                 $pedido->tiempo_preparacion += $tiempo_preparacion;
                 $pedido->estado = 'en preparacion';
                 $pedido->save();
 
-                $response->getBody()->write("Los encargos para {$codigoPedido} del sector BARRA CERVEZA estan en preparacion, llevara {$tiempo_preparacion}m");
+                $response->getBody()->write("Los encargos para {$codigoPedido} del sector BARRA CERVEZA estan en preparacion, llevara {$tiempo_preparacion}m\n{$listaProductos}");
                 return $response->withStatus(200);
                 break;
             case 'cocinero':
                 $encargos = Encargo::where('sector', '=', 'cocina')->where('codigo_pedido', '=', $codigoPedido)->get();
+                //echo $encargos;
                 foreach ($encargos as $encargo) {
                     $encargo->estado = "en preparacion";
                     $encargo->tiempo_preparacion += $tiempo_preparacion;
                     $encargo->save();
+                    $producto = Producto::where('id', '=', $encargo->id_producto)->first();
+                    //echo $producto->descripcion;
+                    $listaProductos .= "{$producto->descripcion}";
                 }
-               
-
                 $pedido->tiempo_preparacion += $tiempo_preparacion;
                 $pedido->estado = 'en preparacion';
                 $pedido->save();
 
-                $response->getBody()->write("Los encargos para {$codigoPedido} del sector COCINA estan en preparacion, llevara {$tiempo_preparacion}m");
+                $response->getBody()->write("Los encargos para {$codigoPedido} del sector COCINA estan en preparacion, llevara {$tiempo_preparacion}m\n{$listaProductos}");
                 return $response->withStatus(200);
                 break;
                 
@@ -88,7 +96,7 @@ class EncargoController{
         ->first();
         $token =  $request->getHeader('token');
         $decoded = JWT::decode($token[0], "laComanda", array('HS256'));
-
+        $listaProductos = "Productos listos para servir: \n";
         switch ($decoded->tipo) {
             case 'bartender':
                 $encargos = Encargo::where('sector', '=', 'bar')->where('codigo_pedido', '=', $codigoPedido)->get();
@@ -96,12 +104,15 @@ class EncargoController{
                     $encargo->estado = "listo para servir";
                     $pedido->tiempo_preparacion -= $encargo->tiempo_preparacion;
                     $encargo->save();
+
+                    $producto = Producto::where('id', '=', $encargo->id_producto)->first();
+                    $listaProductos .= "{$producto->descripcion}";
                 }
                
                 
                 $estadoPedido = $this->checkEstado($pedido, $codigoPedido);
                 $pedido->save();
-                $response->getBody()->write("Los encargos para {$codigoPedido} del sector BARRA TRAGOS Y VINOS ya estan listos para servir\n{$estadoPedido}");
+                $response->getBody()->write("Los encargos para {$codigoPedido} del sector BARRA TRAGOS Y VINOS ya estan listos para servir\n{$listaProductos}\n{$estadoPedido}");
                 return $response->withStatus(200);
                 break;
             
@@ -111,11 +122,13 @@ class EncargoController{
                     $encargo->estado = "listo para servir";
                     $pedido->tiempo_preparacion -= $encargo->tiempo_preparacion;
                     $encargo->save();
+                    $producto = Producto::where('id', '=', $encargo->id_producto)->first();
+                    $listaProductos .= "{$producto->descripcion}";
                 }
 
                 $estadoPedido = $this->checkEstado($pedido, $codigoPedido);
                 $pedido->save();
-                $response->getBody()->write("Los encargos para {$codigoPedido} del sector BARRA CERVEZA ya estan listos para servir\n{$estadoPedido}");
+                $response->getBody()->write("Los encargos para {$codigoPedido} del sector BARRA CERVEZA ya estan listos para servir\n{$listaProductos}\n{$estadoPedido}");
                 return $response->withStatus(200);
                 break;
             case 'cocinero':
@@ -124,12 +137,14 @@ class EncargoController{
                     $encargo->estado = "listo para servir";
                     $pedido->tiempo_preparacion -= $encargo->tiempo_preparacion;
                     $encargo->save();
+                    $producto = Producto::where('id', '=', $encargo->id_producto)->first();
+                    $listaProductos .= "{$producto->descripcion}";
                 }
                 
 
                 $estadoPedido = $this->checkEstado($pedido, $codigoPedido);
                 $pedido->save();
-                $response->getBody()->write("Los encargos para {$codigoPedido} del sector COCINA ya estan listos para servir\n{$estadoPedido}");
+                $response->getBody()->write("Los encargos para {$codigoPedido} del sector COCINA ya estan listos para servir\n{$listaProductos}\n{$estadoPedido}");
                 return $response->withStatus(200);
                 break;
                 

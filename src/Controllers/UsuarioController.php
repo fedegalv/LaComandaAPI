@@ -41,17 +41,17 @@ class UsuarioController
 
         //GUARDA EN BASE DE DATO, DEVUELVE TRUE OR FALSE
         $rta = $usuario->save();
-        $response->getBody()->write("USUARIO SUSPENDIDO CON EXITO");
+        $response->getBody()->write("USUARIO {$usuario->usuario} SUSPENDIDO CON EXITO");
         return $response->withStatus(200);
     }
     public function delete(Request $request, Response $response, $args)
     {
         //BUSCA ALUMNO POR ID
-        $alumno = Usuario::find($args['id']);
+        $usuario = Usuario::find($args['id']);
 
         //BORRA DE BASE DE DATO, DEVUELVE TRUE OR FALSE
-        $rta = $alumno->delete();
-        $response->getBody()->write("USUARIO BORRADO CON EXITO");
+        $rta = $usuario->delete();
+        $response->getBody()->write("USUARIO {$usuario->usuario} BORRADO CON EXITO");
         return $response->withStatus(200);
     }
 
@@ -67,7 +67,7 @@ class UsuarioController
 
         $rta = $usuario->save();
         if ($rta) {
-            $response->getBody()->write("USUARIO REGISTRADO CON EXITO");
+            $response->getBody()->write("USUARIO {$usuario->usuario} REGISTRADO CON EXITO");
         } else {
             $response->getBody()->write("HUBO UN ERROR AL REGISTRAR");
             return $response->withStatus(400);

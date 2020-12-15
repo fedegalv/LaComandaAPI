@@ -48,7 +48,7 @@ class MesaController{
         {
             $mesa->estado = "con clientes pagando";
             $mesa->save();
-            $response->getBody()->write("Clientes de la mesa {$codigoMesa} estan pagando");
+            $response->getBody()->write("Clientes de la mesa {$codigoMesa} estan pagando\nTOTAL A PAGAR: {$mesa->facturacion}");
             return $response->withStatus(200);
         }
         else{
@@ -67,5 +67,49 @@ class MesaController{
         $mesa->save();
         $response->getBody()->write("La mesa {$codigoMesa} fue cerrada");
         return $response->withStatus(200);
+    }
+
+    public function mesaMasFacturo(Request $request, Response $response, $args)
+    {
+        $mesas = Mesa::get();
+        if (count($mesas) > 0) {
+            $facturacionMax = 0;
+            foreach ($mesas as $mesa) {
+                if ($mesa->facturacion > $facturacionMax) {
+                    $facturacionMax = $mesa->facturacion;
+                    $mesaFactMaxima =$mesa->codigo_mesa;
+                }
+            }
+    
+            $response->getBody()->write("La mesa {$mesaFactMaxima} fue la que tuvo mas facturacion con: $ {$facturacionMax}");
+            return $response->withStatus(200);
+        }
+        else{
+            $response->getBody()->write("No hay mesas para mostrar");
+            return $response->withStatus(400);
+        }
+        
+    }
+
+    public function mesaMenosFacturo(Request $request, Response $response, $args)
+    {
+        $mesas = Mesa::get();
+        if (count($mesas) > 0) {
+            $facturacionMin = PHP_INT_MAX;
+            foreach ($mesas as $mesa) {
+                if ($mesa->facturacion < $facturacionMin) {
+                    $facturacionMin = $mesa->facturacion;
+                    $mesaFactMaxima =$mesa->codigo_mesa;
+                }
+            }
+    
+            $response->getBody()->write("La mesa {$mesaFactMaxima} fue la que tuvo menos facturacion con: $ {$facturacionMin}");
+            return $response->withStatus(200);
+        }
+        else{
+            $response->getBody()->write("No hay mesas para mostrar");
+            return $response->withStatus(400);
+        }
+        
     }
 }

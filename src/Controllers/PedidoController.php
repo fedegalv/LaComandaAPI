@@ -14,6 +14,15 @@ use App\Models\Auxiliar;
 use App\Models\Mesa;
 
 class PedidoController{
+    public function getAll(Request $request, Response $response, $args)
+    {
+        //CONSULTA PARA TRAER TODOS LOS RESULTADOS EN LA TABLA
+        $rta = Pedido::get();
+
+        
+        $response->getBody()->write(json_encode($rta));
+        return $response;
+    }
 
     public function getPendiente(Request $request, Response $response)
     {
@@ -52,6 +61,7 @@ class PedidoController{
         $codigoMesa = Auxiliar::generarCodigo();
         //echo $codigo;
         
+        $pedidoTexto= "Se pidio: \n";
         //$encargos = $request->getParsedBody()['encargos'];
         $encargos = json_decode($request->getParsedBody()['encargos']);
         //var_dump($comidas);
@@ -73,6 +83,8 @@ class PedidoController{
             $encargo->sector = $producto['sector'];
             $encargo->tiempo_preparacion = 0;
             $encargo->save();
+
+            $pedidoTexto .= "{$producto->descripcion} - {$encargo->cantidad} unidades - PRECIO x U: {$producto->precio}\n";
 
             //TOTAL ENCARGO
             $totalEncargo = $producto->precio * $encargo->cantidad;
@@ -102,7 +114,8 @@ class PedidoController{
 
         $rta = $pedido->save();
         if ($rta) {
-            $response->getBody()->write("PEDIDO CODIGO:'{$pedido->codigo}' REGISTRADO CON EXITO, ASIGNADO A MESA CODIGO: '{$mesa->codigo_mesa}'");
+            $response->getBody()->write("PEDIDO CODIGO:'{$pedido->codigo}' REGISTRADO CON EXITO, ASIGNADO A MESA CODIGO: '{$mesa->codigo_mesa}'\n{$pedidoTexto}\nTOTAL: {$facturaTotal}");
+
         } else {
             $response->getBody()->write("HUBO UN ERROR AL REGISTRAR EL PEDIDO");
             return $response->withStatus(400);
@@ -162,15 +175,41 @@ class PedidoController{
                 {
                     $cont += $encargo->cantidad;
                 }
-                if($cont > $cantMax)
+                
+            }
+            if($cont > $cantMax)
                 {
                     $cantMax = $cont;
                     $descripcionMasVendido = $producto->descripcion;
                 }
-            }
             $cont = 0;
         }
         $response->getBody()->write("El producto mas pedido es: '{$descripcionMasVendido}' con: {$cantMax} unidades");
+        return $response->withStatus(200);
+       
+    }
+    public function loMenosVendido(Request $request, Response $response)
+    {
+        $productos = Producto::get();
+        $encargos = Encargo::get();
+        $cont = 0;
+        $cantMin= PHP_INT_MAX;
+        foreach ($productos as $producto) {
+            foreach ($encargos as $encargo) {
+                if($encargo->id_producto == $producto->id)
+                {
+                    $cont += $encargo->cantidad;
+                }
+                
+            }
+            if($cont < $cantMin)
+                {
+                    $cantMin = $cont;
+                    $descripcionMenosVendido = $producto->descripcion;
+                }
+            $cont = 0;
+        }
+        $response->getBody()->write("El producto menos pedido es: '{$descripcionMenosVendido}' con: {$cantMin} unidades");
         return $response->withStatus(200);
        
     }
